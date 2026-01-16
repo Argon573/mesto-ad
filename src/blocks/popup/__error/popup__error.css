@@ -8,3 +8,12 @@
   opacity: 0;
   transition: opacity 0.3s;
 }
+
+.popup__error_visible {
+    display: block;
+}
+
+.popup__input_type_error {
+    border: 1px solid red !important;
+    outline: none; !important;
+}

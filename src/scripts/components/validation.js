@@ -1,13 +1,14 @@
 // Показывает сообщение об ошибке
-const showInputError = (formElement, inputElement, errorMessage, config) => {
+function showInputError(formElement, inputElement, errorMessage, settings) {
     const errorElement = formElement.querySelector(
         `#${inputElement.id}-error`
     );
 
-    inputElement.classList.add(config.inputErrorClass);
+
+    inputElement.classList.add(settings.inputErrorClass);
     errorElement.textContent = errorMessage;
-    errorElement.classList.add(config.errorClass);
-};
+    errorElement.classList.add(settings.errorClass);
+}
 
 // Скрывает сообщение об ошибке
 const hideInputError = (formElement, inputElement, config) => {
@@ -21,18 +22,19 @@ const hideInputError = (formElement, inputElement, config) => {
 };
 
 // Проверяет валидность одного поля
-const checkInputValidity = (formElement, inputElement, config) => {
+function checkInputValidity(formElement, inputElement, settings) {
     if (!inputElement.validity.valid) {
-        showInputError(
-            formElement,
-            inputElement,
-            inputElement.validationMessage,
-            config
-        );
+        // Если ошибка по паттерну, показать кастомный текст из data-error-message
+        if (inputElement.validity.patternMismatch) {
+            showInputError(formElement, inputElement, inputElement.dataset.errorMessage, settings);
+        } else {
+            // Иначе показать стандартное сообщение браузера
+            showInputError(formElement, inputElement, inputElement.validationMessage, settings);
+        }
     } else {
-        hideInputError(formElement, inputElement, config);
+        hideInputError(formElement, inputElement, settings);
     }
-};
+}
 
 // Проверяет, есть ли невалидные поля
 const hasInvalidInput = (inputList) => {
