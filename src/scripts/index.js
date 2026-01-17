@@ -150,22 +150,30 @@ allPopups.forEach((popup) => {
   setCloseModalWindowEventListeners(popup);
 });
 
+
+
 Promise.all([getCardList(), getUserInfo()])
     .then(([cards, userData]) => {
       profileTitle.textContent = userData.name;
       profileDescription.textContent = userData.about;
       profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
-
+      console.log(userData);
       cards.forEach((card) => {
-        placesWrap.append(
-          createCardElement(card, {
-            onPreviewPicture: handlePreviewPicture,
-            onLikeIcon: likeCard,
-            onDeleteCard: deleteCard,
-          })
-        );
+        const cardElement = createCardElement(card, {
+          onPreviewPicture: handlePreviewPicture,
+          onLikeIcon: likeCard,
+          onDeleteCard: deleteCard,
+        })
+
+        if (card.owner._id !== userData._id) {
+          const deleteButton = cardElement.querySelector(".card__control-button_type_delete");
+          deleteButton.remove();
+        }
+
+        placesWrap.prepend(cardElement);
       });
     })
     .catch((err) => {
       console.log(err);
     })
+
