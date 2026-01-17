@@ -8,7 +8,7 @@
 import { createCardElement, likeCard, deleteCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from './components/validation.js';
-import { getUserInfo, getCardList } from "./components/api.js";
+import { getUserInfo, getCardList, setUserInfo } from "./components/api.js";
 
 // Валидация
 const validationConfig = {
@@ -59,9 +59,18 @@ const handlePreviewPicture = ({ name, link }) => {
 
 const handleProfileFormSubmit = (evt) => {
   evt.preventDefault();
-  profileTitle.textContent = profileTitleInput.value;
-  profileDescription.textContent = profileDescriptionInput.value;
-  closeModalWindow(profileFormModalWindow);
+  setUserInfo({
+    name: profileTitleInput.value,
+    about: profileDescriptionInput.value,
+  })
+      .then((userData) => {
+        profileTitle.textContent = userData.name;
+        profileDescription.textContent = userData.about;
+        closeModalWindow(profileFormModalWindow);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 };
 
 const handleAvatarFromSubmit = (evt) => {

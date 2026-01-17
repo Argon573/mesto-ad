@@ -21,3 +21,14 @@ export const getCardList = () => {
         headers: config.headers, // Подставляем заголовки
     }).then(getResponseData);  // Проверяем успешность выполнения запроса
 };
+
+export const setUserInfo = ({ name, about }) => {
+  return fetch(`${config.baseUrl}/users/me`, {
+    method: "PATCH",
+    headers: config.headers,
+    body: JSON.stringify({
+      name,
+      about,
+    }),
+  }).then(getResponseData);
+};
