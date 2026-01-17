@@ -8,7 +8,7 @@
 import { createCardElement, likeCard, deleteCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from './components/validation.js';
-import { getUserInfo, getCardList, setUserInfo, setAvatar } from "./components/api.js";
+import { getUserInfo, getCardList, setUserInfo, setAvatar, setCard } from "./components/api.js";
 
 // Валидация
 const validationConfig = {
@@ -89,21 +89,29 @@ const handleAvatarFromSubmit = (evt) => {
 
 const handleCardFormSubmit = (evt) => {
   evt.preventDefault();
-  placesWrap.prepend(
-    createCardElement(
-      {
-        name: cardNameInput.value,
-        link: cardLinkInput.value,
-      },
-      {
-        onPreviewPicture: handlePreviewPicture,
-        onLikeIcon: likeCard,
-        onDeleteCard: deleteCard,
-      }
-    )
-  );
-
-  closeModalWindow(cardFormModalWindow);
+  setCard({
+    name: cardNameInput.value,
+    link: cardLinkInput.value,
+  })
+    .then((cardData) => {
+      placesWrap.prepend(
+        createCardElement(
+            {
+              name: cardData.name,
+              link: cardData.link,
+            },
+            {
+              onPreviewPicture: handlePreviewPicture,
+              onLikeIcon: likeCard,
+              onDeleteCard: deleteCard,
+            }
+        )
+      );
+      closeModalWindow(cardFormModalWindow);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
 };
 
 // EventListeners
