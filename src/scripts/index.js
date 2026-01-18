@@ -8,7 +8,7 @@
 import { createCardElement, likeCard, deleteCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from './components/validation.js';
-import { getUserInfo, getCardList, setUserInfo, setAvatar, setCard, deleteCardFromServ } from "./components/api.js";
+import { getUserInfo, getCardList, setUserInfo, setAvatar, setCard, deleteCardFromServ, changeLikeCardStatus } from "./components/api.js";
 
 // Валидация
 const validationConfig = {
@@ -124,6 +124,27 @@ const handleDeleteCard = (cardElement, cardData) => {
       })
 }
 
+const handleLikeChange = (likeButton, cardData) => {
+  const isLiked = likeButton.classList.contains("card__like-button_is-active");
+
+  changeLikeCardStatus(cardData._id, isLiked)
+      .then((updatedCard) => {
+        const isLikedNow = updatedCard.likes.some(
+            (user) => user._id === currentUserId
+        );
+
+        likeButton.classList.toggle(
+            "card__like-button_is-active",
+            isLikedNow
+        );
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+};
+
+
+
 // EventListeners
 profileForm.addEventListener("submit", handleProfileFormSubmit);
 cardForm.addEventListener("submit", handleCardFormSubmit);
@@ -171,7 +192,7 @@ Promise.all([getCardList(), getUserInfo()])
       cards.forEach((card) => {
         const cardElement = createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
-          onLikeIcon: likeCard,
+          onLikeIcon: (btn) => handleLikeChange(btn, card),
           onDeleteCard: (el) => handleDeleteCard(el, card),
         })
 
@@ -180,10 +201,14 @@ Promise.all([getCardList(), getUserInfo()])
           deleteButton.remove();
         }
 
+        if (card.likes.some((user) => user._id === userData._id)) {
+          const likeButton = cardElement.querySelector(".card__like-button");
+          likeButton.classList.add("card__like-button_is-active");
+        }
+
         placesWrap.prepend(cardElement);
       });
     })
     .catch((err) => {
       console.log(err);
     })
-
