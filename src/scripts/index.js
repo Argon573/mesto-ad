@@ -8,7 +8,7 @@
 import { createCardElement, likeCard, deleteCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from './components/validation.js';
-import { getUserInfo, getCardList, setUserInfo, setAvatar, setCard } from "./components/api.js";
+import { getUserInfo, getCardList, setUserInfo, setAvatar, setCard, deleteCardFromServ } from "./components/api.js";
 
 // Валидация
 const validationConfig = {
@@ -114,6 +114,16 @@ const handleCardFormSubmit = (evt) => {
     })
 };
 
+const handleDeleteCard = (cardElement, cardData) => {
+  deleteCardFromServ(cardData._id)
+      .then(() => {
+        cardElement.remove();
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+}
+
 // EventListeners
 profileForm.addEventListener("submit", handleProfileFormSubmit);
 cardForm.addEventListener("submit", handleCardFormSubmit);
@@ -162,7 +172,7 @@ Promise.all([getCardList(), getUserInfo()])
         const cardElement = createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
           onLikeIcon: likeCard,
-          onDeleteCard: deleteCard,
+          onDeleteCard: (el) => handleDeleteCard(el, card),
         })
 
         if (card.owner._id !== userData._id) {
