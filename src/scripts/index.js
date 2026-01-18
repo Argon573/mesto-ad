@@ -283,6 +283,7 @@ allPopups.forEach((popup) => {
 
 Promise.all([getCardList(), getUserInfo()])
     .then(([cards, userData]) => {
+      let currentUserId = userData._id;
       profileTitle.textContent = userData.name;
       profileDescription.textContent = userData.about;
       profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
@@ -291,12 +292,12 @@ Promise.all([getCardList(), getUserInfo()])
         const cardElement = createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
           onLikeIcon: (btn, counter) =>
-              handleLikeChange(btn, counter, card, userData._id), // передаем ID текущего пользователя
+              handleLikeChange(btn, counter, card, currentUserId), // передаем ID текущего пользователя
           onDeleteCard: (el) => handleDeleteCard(el, card),
         });
 
         // Скрываем кнопку удаления для чужих карточек
-        if (card.owner._id !== userData._id) {
+        if (card.owner._id !== currentUserId) {
           const deleteButton = cardElement.querySelector(
               ".card__control-button_type_delete"
           );
@@ -304,7 +305,7 @@ Promise.all([getCardList(), getUserInfo()])
         }
 
         // Отображаем, если текущий пользователь уже лайкнул карточку
-        if (card.likes.some((user) => user._id === userData._id)) {
+        if (card.likes.some((user) => user._id === currentUserId)) {
           const likeButton = cardElement.querySelector(".card__like-button");
           likeButton.classList.add("card__like-button_is-active");
         }
