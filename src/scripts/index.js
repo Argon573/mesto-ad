@@ -87,7 +87,7 @@ const handleProfileFormSubmit = (evt) => {
         profileDescription.textContent = userData.about;
         closeModalWindow(profileFormModalWindow);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
       .finally(() => {
         renderLoading(submitButton, false, "Сохранить", "Сохранение...");
       });
@@ -104,7 +104,7 @@ const handleAvatarFromSubmit = (evt) => {
         profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
         closeModalWindow(avatarFormModalWindow);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
       .finally(() => {
         renderLoading(submitButton, false, "Сохранить", "Сохранение...");
       });
@@ -130,7 +130,7 @@ const handleCardFormSubmit = (evt) => {
         placesWrap.prepend(cardElement);
         closeModalWindow(cardFormModalWindow);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
       .finally(() => {
         renderLoading(submitButton, false, "Создать", "Создание...");
       });
@@ -143,7 +143,7 @@ const handleDeleteCard = (cardElement, cardData) => {
         cardElement.remove();
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       })
 }
 
@@ -162,7 +162,7 @@ const handleLikeChange = (likeButton, likeCountElement, cardData, currentUserId)
         // Обновляем счетчик лайков
         likeCountElement.textContent = updatedCard.likes.length;
       })
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
 };
 
 
@@ -182,13 +182,10 @@ const handleInfoModalOpen = () => {
           if (!usersMap.has(card.owner._id)) {
             usersMap.set(card.owner._id, {
               name: card.owner.name,
-              avatar: card.owner.avatar,
-              cardsCount: 0,
               totalLikesByUser: 0,
             });
           }
           const userData = usersMap.get(card.owner._id);
-          userData.cardsCount += 1;
           userData.totalLikesByUser += card.likes.length;
           totalLikes += card.likes.length;
         });
@@ -318,6 +315,6 @@ Promise.all([getCardList(), getUserInfo()])
       });
     })
     .catch((err) => {
-      console.log(err);
+      console.error(err);
     });
 
