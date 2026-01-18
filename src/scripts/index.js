@@ -35,6 +35,7 @@ const cardForm = cardFormModalWindow.querySelector(".popup__form");
 const cardNameInput = cardForm.querySelector(".popup__input_type_card-name");
 const cardLinkInput = cardForm.querySelector(".popup__input_type_url");
 
+
 const imageModalWindow = document.querySelector(".popup_type_image");
 const imageElement = imageModalWindow.querySelector(".popup__image");
 const imageCaption = imageModalWindow.querySelector(".popup__caption");
@@ -50,6 +51,16 @@ const avatarFormModalWindow = document.querySelector(".popup_type_edit-avatar");
 const avatarForm = avatarFormModalWindow.querySelector(".popup__form");
 const avatarInput = avatarForm.querySelector(".popup__input");
 
+const infoModalWindow = document.querySelector(".popup_type_info");
+const infoCloseButton = infoModalWindow.querySelector(".popup__close");
+const infoDefinitionList = infoModalWindow.querySelector(".popup__info");
+const infoUserList = infoModalWindow.querySelector(".popup__list");
+
+const infoDefinitionTemplate = document.getElementById("popup-info-definition-template").content.querySelector(".popup__info-item");
+const infoUserPreviewTemplate = document.getElementById("popup-info-user-preview-template").content.querySelector(".popup__list-item");
+
+const logoButton = document.querySelector(".header__logo");
+
 const handlePreviewPicture = ({ name, link }) => {
   imageElement.src = link;
   imageElement.alt = name;
@@ -57,8 +68,16 @@ const handlePreviewPicture = ({ name, link }) => {
   openModalWindow(imageModalWindow);
 };
 
+const renderLoading = (button, isLoading, defaultText, loadingText) => {
+  button.textContent = isLoading ? loadingText : defaultText;
+};
+
+
 const handleProfileFormSubmit = (evt) => {
   evt.preventDefault();
+  const submitButton = profileForm.querySelector(".popup__button");
+  renderLoading(submitButton, true, "Сохранить", "Сохранение...");
+
   setUserInfo({
     name: profileTitleInput.value,
     about: profileDescriptionInput.value,
@@ -68,51 +87,55 @@ const handleProfileFormSubmit = (evt) => {
         profileDescription.textContent = userData.about;
         closeModalWindow(profileFormModalWindow);
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((err) => console.log(err))
+      .finally(() => {
+        renderLoading(submitButton, false, "Сохранить", "Сохранение...");
       });
 };
 
+
 const handleAvatarFromSubmit = (evt) => {
   evt.preventDefault();
-  setAvatar({
-    avatar: avatarInput.value,
-  })
-    .then((userData) => {
-      profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
-      closeModalWindow(avatarFormModalWindow);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
+  const submitButton = avatarForm.querySelector(".popup__button");
+  renderLoading(submitButton, true, "Сохранить", "Сохранение...");
+
+  setAvatar({ avatar: avatarInput.value })
+      .then((userData) => {
+        profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
+        closeModalWindow(avatarFormModalWindow);
+      })
+      .catch((err) => console.log(err))
+      .finally(() => {
+        renderLoading(submitButton, false, "Сохранить", "Сохранение...");
+      });
 };
+
 
 const handleCardFormSubmit = (evt) => {
   evt.preventDefault();
+  const submitButton = cardForm.querySelector(".popup__button");
+  renderLoading(submitButton, true, "Создать", "Создание...");
+
   setCard({
     name: cardNameInput.value,
     link: cardLinkInput.value,
   })
-    .then((cardData) => {
-      placesWrap.prepend(
-        createCardElement(
-            {
-              name: cardData.name,
-              link: cardData.link,
-            },
-            {
-              onPreviewPicture: handlePreviewPicture,
-              onLikeIcon: likeCard,
-              onDeleteCard: deleteCard,
-            }
-        )
-      );
-      closeModalWindow(cardFormModalWindow);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
+      .then((cardData) => {
+        const cardElement = createCardElement(cardData, {
+          onPreviewPicture: handlePreviewPicture,
+          onLikeIcon: (btn, counter) =>
+              handleLikeChange(btn, counter, cardData, currentUserId),
+          onDeleteCard: (el) => handleDeleteCard(el, cardData),
+        });
+        placesWrap.prepend(cardElement);
+        closeModalWindow(cardFormModalWindow);
+      })
+      .catch((err) => console.log(err))
+      .finally(() => {
+        renderLoading(submitButton, false, "Создать", "Создание...");
+      });
 };
+
 
 const handleDeleteCard = (cardElement, cardData) => {
   deleteCardFromServ(cardData._id)
@@ -124,24 +147,99 @@ const handleDeleteCard = (cardElement, cardData) => {
       })
 }
 
-const handleLikeChange = (likeButton, cardData) => {
+const handleLikeChange = (likeButton, likeCountElement, cardData, currentUserId) => {
+  // Проверяем, лайкнута ли карточка сейчас
   const isLiked = likeButton.classList.contains("card__like-button_is-active");
 
   changeLikeCardStatus(cardData._id, isLiked)
       .then((updatedCard) => {
-        const isLikedNow = updatedCard.likes.some(
-            (user) => user._id === currentUserId
-        );
+        // Проверяем, лайкнул ли текущий пользователь
+        const isLikedNow = updatedCard.likes.some(user => user._id === currentUserId);
 
-        likeButton.classList.toggle(
-            "card__like-button_is-active",
-            isLikedNow
-        );
+        // Проставляем класс кнопки
+        likeButton.classList.toggle("card__like-button_is-active", isLikedNow);
+
+        // Обновляем счетчик лайков
+        likeCountElement.textContent = updatedCard.likes.length;
+      })
+      .catch(err => console.log(err));
+};
+
+
+
+// Обработчик клика по логотипу для открытия статистики
+const handleInfoModalOpen = () => {
+  infoDefinitionList.innerHTML = "";
+  infoUserList.innerHTML = "";
+
+  getCardList()
+      .then((cards) => {
+        // Считаем статистику
+        const usersMap = new Map();
+        let totalLikes = 0;
+
+        cards.forEach((card) => {
+          if (!usersMap.has(card.owner._id)) {
+            usersMap.set(card.owner._id, {
+              name: card.owner.name,
+              avatar: card.owner.avatar,
+              cardsCount: 0,
+              totalLikesByUser: 0,
+            });
+          }
+          const userData = usersMap.get(card.owner._id);
+          userData.cardsCount += 1;
+          userData.totalLikesByUser += card.likes.length;
+          totalLikes += card.likes.length;
+        });
+
+        const totalUsers = usersMap.size;
+
+        // Чемпион лайков
+        let championUser = null;
+        let maxLikes = 0;
+        usersMap.forEach((user) => {
+          if (user.totalLikesByUser > maxLikes) {
+            maxLikes = user.totalLikesByUser;
+            championUser = user;
+          }
+        });
+
+        // Функция добавления строки статистики
+        const addStatItem = (term, description) => {
+          const statElement = infoDefinitionTemplate.cloneNode(true);
+          statElement.querySelector(".popup__info-term").textContent = term;
+          statElement.querySelector(".popup__info-description").textContent = description;
+          infoDefinitionList.appendChild(statElement);
+        };
+
+        addStatItem("Всего пользователей:", totalUsers);
+        addStatItem("Всего лайков:", totalLikes);
+        addStatItem("Максимально лайков от одного:", maxLikes);
+        addStatItem("Чемпион лайков:", championUser ? championUser.name : "—");
+
+        // Топ-3 популярных карточек по лайкам
+        const topCards = [...cards].sort((a, b) => b.likes.length - a.likes.length).slice(0, 3);
+
+        topCards.forEach((card) => {
+          const userPreviewElement = infoUserPreviewTemplate.cloneNode(true);
+          userPreviewElement.textContent = card.name;
+          infoUserList.appendChild(userPreviewElement);
+        });
+
+        openModalWindow(infoModalWindow);
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       });
 };
+
+// Закрытие статистики по кнопке
+infoCloseButton.addEventListener("click", () => closeModalWindow(infoModalWindow));
+
+// Открытие по клику на логотип
+logoButton.addEventListener("click", handleInfoModalOpen);
+
 
 
 
@@ -188,27 +286,37 @@ Promise.all([getCardList(), getUserInfo()])
       profileTitle.textContent = userData.name;
       profileDescription.textContent = userData.about;
       profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
-      console.log(userData);
+
       cards.forEach((card) => {
         const cardElement = createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
-          onLikeIcon: (btn) => handleLikeChange(btn, card),
+          onLikeIcon: (btn, counter) =>
+              handleLikeChange(btn, counter, card, userData._id), // передаем ID текущего пользователя
           onDeleteCard: (el) => handleDeleteCard(el, card),
-        })
+        });
 
+        // Скрываем кнопку удаления для чужих карточек
         if (card.owner._id !== userData._id) {
-          const deleteButton = cardElement.querySelector(".card__control-button_type_delete");
+          const deleteButton = cardElement.querySelector(
+              ".card__control-button_type_delete"
+          );
           deleteButton.remove();
         }
 
+        // Отображаем, если текущий пользователь уже лайкнул карточку
         if (card.likes.some((user) => user._id === userData._id)) {
           const likeButton = cardElement.querySelector(".card__like-button");
           likeButton.classList.add("card__like-button_is-active");
         }
+
+        // Счетчик лайков
+        const likeCountElement = cardElement.querySelector(".card__like-count");
+        likeCountElement.textContent = card.likes.length;
 
         placesWrap.prepend(cardElement);
       });
     })
     .catch((err) => {
       console.log(err);
-    })
+    });
+

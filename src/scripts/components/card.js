@@ -14,11 +14,12 @@ const getTemplate = () => {
 };
 
 export const createCardElement = (
-  data,
-  { onPreviewPicture, onLikeIcon, onDeleteCard }
+    data,
+    { onPreviewPicture, onLikeIcon, onDeleteCard }
 ) => {
   const cardElement = getTemplate();
   const likeButton = cardElement.querySelector(".card__like-button");
+  const likeCountElement = cardElement.querySelector(".card__like-count");
   const deleteButton = cardElement.querySelector(".card__control-button_type_delete");
   const cardImage = cardElement.querySelector(".card__image");
 
@@ -26,8 +27,13 @@ export const createCardElement = (
   cardImage.alt = data.name;
   cardElement.querySelector(".card__title").textContent = data.name;
 
+  // начальное количество лайков
+  likeCountElement.textContent = data.likes.length;
+
   if (onLikeIcon) {
-    likeButton.addEventListener("click", () => onLikeIcon(likeButton));
+    likeButton.addEventListener("click", () =>
+        onLikeIcon(likeButton, likeCountElement)
+    );
   }
 
   if (onDeleteCard) {
@@ -35,8 +41,12 @@ export const createCardElement = (
   }
 
   if (onPreviewPicture) {
-    cardImage.addEventListener("click", () => onPreviewPicture({name: data.name, link: data.link}));
+    cardImage.addEventListener("click", () =>
+        onPreviewPicture({ name: data.name, link: data.link })
+    );
   }
 
   return cardElement;
 };
+
+
