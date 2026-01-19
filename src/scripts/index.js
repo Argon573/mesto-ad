@@ -166,7 +166,6 @@ const handleLikeChange = (likeButton, likeCountElement, cardData, currentUserId)
 };
 
 
-
 // Обработчик клика по логотипу для открытия статистики
 const handleInfoModalOpen = () => {
   infoDefinitionList.innerHTML = "";

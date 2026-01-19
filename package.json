@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "Стартовый набор для выполнения проектной работы Место",
   "keywords": [],
-  "homepage": "https://github.com/Argon573/mesto-ad#readme",
+  "homepage": "",
   "bugs": {
-    "url": "https://github.com/Argon573/mesto-ad/issues"
+    "url": ""
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Argon573/mesto-ad.git"
+    "url": ""
   },
   "license": "ISC",
   "author": "",
